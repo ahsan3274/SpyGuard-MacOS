@@ -12,7 +12,8 @@ This document summarizes the macOS port of SpyGuard, including all files created
 
 | File | Purpose |
 |------|---------|
-| `install-macos.sh` | Main macOS installer (Homebrew, launchd, Suricata config) |
+| `install-macos.sh` | Main macOS installer (Homebrew, Suricata config) |
+| `run-spyguard.sh` | Simple manual runner script |
 | `uninstall-macos.sh` | Clean uninstallation script |
 | `README-macos.md` | Comprehensive macOS installation and usage guide |
 
@@ -22,7 +23,6 @@ This document summarizes the macOS port of SpyGuard, including all files created
 |------|---------|
 | `analysis/platform.py` | Platform detection (Linux/macOS) with unified API |
 | | - Interface detection (bridge100 vs wlan0) |
-| | - Service management (launchd vs systemd) |
 | | - Path resolution for different platforms |
 | | - Network setup instructions |
 
@@ -66,11 +66,10 @@ This document summarizes the macOS port of SpyGuard, including all files created
 - Replaces apt package manager
 - Installs: suricata, wireshark, sqlite, openssl, python@3.11, dnsmasq
 
-✅ **launchd Service Management**
-- Three LaunchDaemons created:
-  - `com.spyguard.frontend.plist` - User interface (port 8000)
-  - `com.spyguard.backend.plist` - Management API (port 8443)
-  - `com.spyguard.watchers.plist` - IOC updater (periodic)
+✅ **Manual Runner Script**
+- Simple start/stop via `run-spyguard.sh`
+- No background services or auto-start
+- User controls when to run analysis sessions
 
 ✅ **PCAP-Based Capture**
 - Suricata configured for macOS BPF (Berkeley Packet Filter)
@@ -164,7 +163,7 @@ can_hotspot = platform.can_create_hotspot()  # False on macOS
 │  ↓                                 │
 │  Suricata (PCAP/BPF capture)       │
 │  ↓                                 │
-│  launchd LaunchDaemons             │
+│  Manual Runner Script              │
 └─────────────────────────────────────┘
 ```
 
@@ -191,13 +190,11 @@ can_hotspot = platform.can_create_hotspot()  # False on macOS
    ↓
 9. Create SQLite database
    ↓
-10. Create and load LaunchDaemons
+10. Fetch initial IOCs
    ↓
-11. Fetch initial IOCs
+11. Request permissions (Full Disk Access)
    ↓
-12. Request permissions (Full Disk Access)
-   ↓
-13. Display setup instructions
+12. Display setup instructions
 ```
 
 ---
@@ -219,15 +216,6 @@ rule-files:
   - spyguard.rules
 ```
 
-### LaunchDaemons (`/Library/LaunchDaemons/`)
-
-Three plist files with:
-- Program arguments (Python venv path)
-- Working directory
-- RunAtLoad and KeepAlive settings
-- Log file paths
-- Environment variables (PATH, DYLD_LIBRARY_PATH)
-
 ### MISP Guard (`misp_guard_config.json`)
 
 Pre-configured compartments:
@@ -242,9 +230,8 @@ Pre-configured compartments:
 ### Installation
 - [ ] Homebrew packages install correctly
 - [ ] Python venv creates without errors
-- [ ] LaunchDaemons load successfully
-- [ ] Services start automatically
 - [ ] SSL certificates generate
+- [ ] Runner script is executable
 
 ### Network Capture
 - [ ] Internet Sharing creates bridge100
@@ -265,10 +252,10 @@ Pre-configured compartments:
 - [ ] MISP Guard filters IOCs correctly
 - [ ] Compartment rules enforced
 
-### Services
-- [ ] Services survive reboot
+### Runner Script
+- [ ] `run-spyguard.sh` starts both services
+- [ ] Ctrl+C stops both services cleanly
 - [ ] Logs write to /var/log/spyguard/
-- [ ] Can restart via launchctl
 - [ ] Clean uninstall removes everything
 
 ---
@@ -296,9 +283,9 @@ Pre-configured compartments:
 
 | Feature | Linux | macOS | Notes |
 |---------|-------|-------|-------|
-| Hotspot | Automatic | Manual | macOS restriction |
-| Capture Method | AF_PACKET | PCAP | Different performance |
-| Service Manager | systemd | launchd | Both support auto-start |
+| Hotspot | Automatic (hostapd) | Manual (Internet Sharing) | macOS restriction |
+| Capture Method | AF_PACKET | PCAP/BPF | Different performance |
+| Service Manager | systemd | Manual runner | Simpler, user-controlled |
 | Package Manager | apt | Homebrew | Both well-supported |
 
 ---

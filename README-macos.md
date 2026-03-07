@@ -153,7 +153,7 @@ sudo /opt/spyguard/run-spyguard.sh
 ### Documentation
 - `README-macos.md` - This file (main guide)
 - `docs/macos-internet-sharing-setup.md` - Network setup guide
-- `docs/macos-services-architecture.md` - Service architecture
+- `MACOS_PORT_SUMMARY.md` - Implementation details
 
 ---
 
@@ -198,6 +198,53 @@ tail -f /var/log/spyguard/suricata/eve.json
 tail -f /var/log/spyguard/frontend.error.log
 tail -f /var/log/spyguard/backend.error.log
 ```
+
+## 🔒 macOS Permissions (TCC)
+
+### Full Disk Access Required
+
+SpyGuard requires **Full Disk Access** permission to capture network traffic on the `bridge100` interface. Without this permission, packet sniffing will fail silently.
+
+#### Granting Full Disk Access
+
+1. Open **System Settings** → **Privacy & Security** → **Full Disk Access**
+2. Click the **+** button
+3. Add your terminal application:
+   - **Terminal.app**: `/Applications/Utilities/Terminal.app`
+   - **iTerm2**: `/Applications/iTerm.app`
+   - **VS Code Terminal**: `/Applications/Visual Studio Code.app`
+4. Toggle Full Disk Access **ON** for your terminal
+5. **Restart your terminal** for changes to take effect
+
+#### Verifying Permissions
+
+```bash
+# Check if Full Disk Access is granted
+tccutil reset All 2>/dev/null && echo "TCC access available" || echo "TCC access denied"
+```
+
+#### Troubleshooting
+
+**Problem:** No traffic captured on bridge100
+
+**Solution:**
+1. Quit your terminal application completely
+2. Re-open Terminal and run SpyGuard again
+3. If still failing, try running from a different terminal app
+
+**Problem:** "Operation not permitted" errors in logs
+
+**Solution:**
+1. Remove and re-add Full Disk Access permission
+2. Ensure you're running the terminal with the granted permissions (not through Rosetta)
+
+**Problem:** Permission prompt appears when running
+
+**Solution:**
+1. Click "Open System Settings" from the prompt
+2. Grant Full Disk Access
+3. Quit and restart your terminal
+4. Run SpyGuard again
 
 ---
 

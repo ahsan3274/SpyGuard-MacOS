@@ -40,7 +40,7 @@ sudo bash install-macos.sh
 | Feature | Description |
 |---------|-------------|
 | **Installation** | Homebrew-based (automated) |
-| **Services** | launchd (auto-start on boot) |
+| **Services** | Manual runner script (simple) |
 | **Network Capture** | PCAP/BPF via bridge100 |
 | **Network Setup** | macOS Internet Sharing |
 | **MISP Guard** | ✅ Compartment-based IOC filtering |
@@ -74,8 +74,8 @@ sudo bash install-macos.sh
 │  │ IOC      │ │Heuristics│ │MISP Guard  │  │
 │  └──────────┘ └──────────┘ └────────────┘  │
 ├──────────────────────────────────────────────┤
-│  Suricata (PCAP)  │  SQLite  │  launchd    │
-│  bridge100        │  DB      │  Services   │
+│  Suricata (PCAP)  │  SQLite  │  Manual     │
+│  bridge100        │  DB      │  Runner     │
 └──────────────────────────────────────────────┘
 ```
 
@@ -105,15 +105,29 @@ sudo bash install-macos.sh
 
 ## 🔧 Service Management
 
+### Manual Start/Stop (Recommended)
+
 ```bash
-# Check status
-launchctl list | grep spyguard
+# Start SpyGuard
+sudo /opt/spyguard/run-spyguard.sh
 
-# Start services
-sudo launchctl load -w /Library/LaunchDaemons/com.spyguard.*.plist
+# Stop SpyGuard (press Ctrl+C in terminal)
 
-# Stop services
-sudo launchctl unload -w /Library/LaunchDaemons/com.spyguard.*.plist
+# Check if running
+lsof -i :8000 -i :8443
+```
+
+### Kill Stuck Processes
+
+```bash
+# Kill all SpyGuard processes
+sudo pkill -9 -f spyguard
+
+# Or kill by port
+sudo lsof -ti :8000 -i :8443 | xargs sudo kill -9
+
+# Wait for ports to release
+sleep 5
 ```
 
 ## 📊 Logs
@@ -124,6 +138,47 @@ tail -f /var/log/spyguard/frontend.log
 tail -f /var/log/spyguard/backend.log
 tail -f /var/log/spyguard/suricata/eve.json
 ```
+
+## 🔒 macOS Permissions (TCC)
+
+### Full Disk Access Required
+
+SpyGuard requires **Full Disk Access** permission to capture network traffic on the `bridge100` interface. Without this permission, packet sniffing will fail silently.
+
+#### Granting Full Disk Access
+
+1. Open **System Settings** → **Privacy & Security** → **Full Disk Access**
+2. Click the **+** button
+3. Add your terminal application:
+   - **Terminal.app**: `/Applications/Utilities/Terminal.app`
+   - **iTerm2**: `/Applications/iTerm.app`
+   - **VS Code Terminal**: `/Applications/Visual Studio Code.app`
+4. Toggle Full Disk Access **ON** for your terminal
+5. **Restart your terminal** for changes to take effect
+
+#### Verifying Permissions
+
+```bash
+# Check if Full Disk Access is granted
+tccutil reset All 2>/dev/null && echo "TCC access available" || echo "TCC access denied"
+```
+
+#### Troubleshooting
+
+**Problem:** No traffic captured on bridge100
+
+**Solution:**
+1. Quit your terminal application completely
+2. Re-open Terminal and run SpyGuard again
+3. If still failing, try running from a different terminal app
+
+**Problem:** "Operation not permitted" errors in logs
+
+**Solution:**
+1. Remove and re-add Full Disk Access permission
+2. Ensure you're running the terminal with the granted permissions (not through Rosetta)
+
+---
 
 ## 🤝 Contributing
 
