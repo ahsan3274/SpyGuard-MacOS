@@ -11,28 +11,30 @@
 ### Installation
 
 ```bash
-# Clone your fork
-git clone https://github.com/YOUR_USERNAME/SpyGuard.git
-cd SpyGuard
+# Clone this repository
+git clone https://github.com/ahsan3274/SpyGuard-MacOS.git
+cd SpyGuard-MacOS
 
-# Run macOS installer
+# Run macOS installer (requires password)
 sudo bash install-macos.sh
 ```
+
+> **Note:** The installer will prompt for your Mac password, language preference, and backend credentials. Installation takes 10-15 minutes.
 
 ### Access Interfaces
 
 - **Frontend (Analysis):** http://localhost:8000
 - **Backend (Management):** https://localhost:8443
 
-## ✨ What's New in macOS Port
+## ✨ Features
 
-| Feature | Linux | macOS Port |
-|---------|-------|------------|
-| **Installation** | apt | Homebrew |
-| **Services** | systemd | launchd |
-| **Network Capture** | AF_PACKET | PCAP/BPF |
-| **Hotspot** | hostapd | Internet Sharing |
-| **MISP Guard** | ❌ | ✅ **NEW** |
+| Feature | Description |
+|---------|-------------|
+| **Installation** | Homebrew-based (automated) |
+| **Services** | launchd (auto-start on boot) |
+| **Network Capture** | PCAP/BPF via bridge100 |
+| **Network Setup** | macOS Internet Sharing |
+| **MISP Guard** | ✅ Compartment-based IOC filtering |
 
 ## 📖 Documentation
 
