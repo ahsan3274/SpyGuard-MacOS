@@ -1,0 +1,116 @@
+{
+    "allowlist": {
+        "urls": [],
+        "domains": []
+    },
+    "compartments_rules": {
+        "can_reach": {
+            "default": [
+                "default",
+                "stalkerware",
+                "malware",
+                "threat_intel"
+            ],
+            "stalkerware": [
+                "default",
+                "stalkerware"
+            ],
+            "malware": [
+                "default",
+                "malware",
+                "threat_intel"
+            ],
+            "threat_intel": [
+                "default",
+                "malware",
+                "threat_intel"
+            ]
+        }
+    },
+    "instances": {
+        "echap_stalkerware": {
+            "ip": "10.0.1.1",
+            "host": "stalkerware.echap.eu.org",
+            "port": 443,
+            "compartment_id": "stalkerware",
+            "affiliation": "ECHAP",
+            "taxonomies_rules": {
+                "required_taxonomies": [],
+                "allowed_tags": {},
+                "blocked_tags": [
+                    "tlp:red"
+                ]
+            },
+            "blocked_distribution_levels": [
+                "0"
+            ],
+            "blocked_sharing_groups_uuids": [],
+            "blocked_attribute_types": [
+                "passport-number",
+                "email",
+                "phone-number"
+            ],
+            "blocked_attribute_categories": [
+                "Person"
+            ],
+            "blocked_object_types": [
+                "person"
+            ]
+        },
+        "spyguard_malware": {
+            "ip": "10.0.2.1",
+            "host": "malware.spyguard.io",
+            "port": 443,
+            "compartment_id": "malware",
+            "affiliation": "SpyGuard",
+            "taxonomies_rules": {
+                "required_taxonomies": [],
+                "allowed_tags": {},
+                "blocked_tags": []
+            },
+            "blocked_distribution_levels": [],
+            "blocked_sharing_groups_uuids": [],
+            "blocked_attribute_types": [],
+            "blocked_attribute_categories": [],
+            "blocked_object_types": []
+        },
+        "default_threat_intel": {
+            "ip": "10.0.3.1",
+            "host": "threatintel.default.io",
+            "port": 443,
+            "compartment_id": "threat_intel",
+            "affiliation": "Default",
+            "taxonomies_rules": {
+                "required_taxonomies": [
+                    "tlp"
+                ],
+                "allowed_tags": {
+                    "tlp": [
+                        "tlp:clear",
+                        "tlp:white",
+                        "tlp:green"
+                    ]
+                },
+                "blocked_tags": [
+                    "tlp:rainbow",
+                    "tlp:red"
+                ]
+            },
+            "blocked_distribution_levels": [
+                "0",
+                "1"
+            ],
+            "blocked_sharing_groups_uuids": [],
+            "blocked_attribute_types": [
+                "passport-number",
+                "email"
+            ],
+            "blocked_attribute_categories": [
+                "Person"
+            ],
+            "blocked_object_types": [
+                "person"
+            ]
+        }
+    }
+}

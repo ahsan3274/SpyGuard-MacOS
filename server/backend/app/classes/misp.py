@@ -4,17 +4,29 @@
 from app import db
 from app.db.models import MISPInst
 from app.definitions import definitions as defs
+from app.classes.misp_guard import MISPGuard, filter_misp_iocs
 
 from sqlalchemy.sql import exists
 from markupsafe import escape
 from pymisp import PyMISP
 import re
 import time
+import os
+
+
+# Path to MISP Guard configuration
+MISP_GUARD_CONFIG = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "misp_guard_config.json"
+)
 
 
 class MISP(object):
     def __init__(self):
-        return None
+        self.misp_guard = None
+        # Load MISP Guard if config exists
+        if os.path.exists(MISP_GUARD_CONFIG):
+            self.misp_guard = MISPGuard(MISP_GUARD_CONFIG)
 
     def add_instance(self, instance) -> dict:
         """
@@ -121,13 +133,19 @@ class MISP(object):
                     print("Unable to connect to the MISP instance ({}/{}).".format(misp.url, misp.apikey))
                     return []
 
+                # Collect all IOCs first
+                iocs_list = []
                 for attr in r["Attribute"]:
                     if attr["type"] in ["ip-dst", "domain", "snort", "x509-fingerprint-sha1"]:
 
                         ioc = {"value": attr["value"],
                                "type": None,
                                "tag": "suspect",
-                               "tlp": "white"}
+                               "tlp": "white",
+                               "distribution": str(attr.get("distribution", "")),
+                               "sharing_group_uuid": attr.get("SharingGroup", {}).get("uuid", ""),
+                               "tags": [tag['name'] for tag in attr.get("Tag", [])],
+                               "taxonomies": list(set([tag['name'].split(':')[0] for tag in attr.get("Tag", []) if ':' in tag['name']]))}
 
                         # Deduce the IOC type.
                         if re.match(defs["iocs_types"][0]["regex"], attr["value"]):
@@ -154,4 +172,28 @@ class MISP(object):
                                 # Add possible tag (need to match SpyGuard tags)
                                 if tag["name"].lower() in [t["tag"] for t in defs["iocs_tags"]]:
                                     ioc["tag"] = tag["name"].lower()
+                        
+                        iocs_list.append(ioc)
+                
+                # Apply MISP Guard filtering if enabled
+                if self.misp_guard:
+                    # Map database ID to MISP Guard instance ID
+                    # This is a simplified mapping - in production, you'd store the mapping in DB
+                    instance_mapping = {
+                        1: "echap_stalkerware",
+                        2: "spyguard_malware",
+                        3: "default_threat_intel"
+                    }
+                    guard_instance_id = instance_mapping.get(int(misp_id))
+                    
+                    if guard_instance_id:
+                        filtered_iocs = filter_misp_iocs(iocs_list, guard_instance_id, MISP_GUARD_CONFIG)
+                        for ioc in filtered_iocs:
+                            yield ioc
+                    else:
+                        for ioc in iocs_list:
+                            yield ioc
+                else:
+                    # No MISP Guard - yield all IOCs
+                    for ioc in iocs_list:
                         yield ioc
