@@ -21,6 +21,15 @@ sudo bash install-macos.sh
 
 > **Note:** The installer will prompt for your Mac password, language preference, and backend credentials. Installation takes 10-15 minutes.
 
+### Or Use Existing Clone
+
+If you already have the repository:
+
+```bash
+cd /path/to/SpyGuard  # Your existing clone
+sudo bash install-macos.sh
+```
+
 ### Access Interfaces
 
 - **Frontend (Analysis):** http://localhost:8000

@@ -7,7 +7,7 @@
 Open Terminal and run:
 
 ```bash
-cd /Users/ahsan/Documents/GitHub/SpyGuard-MacOS
+cd /Users/ahsan/Documents/GitHub/SpyGuard
 sudo bash install-macos.sh
 ```
 
