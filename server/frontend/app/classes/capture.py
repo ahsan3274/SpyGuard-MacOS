@@ -51,8 +51,16 @@ class Capture(object):
             f.write(json.dumps({ "instance_uuid" : get_device_uuid().strip() }))
 
         try:
+            # macOS Suricata path: /opt/homebrew/etc/suricata/suricata.yaml
+            # Linux Suricata path: /etc/suricata/suricata.yaml
+            import os
+            if os.path.exists("/opt/homebrew/etc/suricata/suricata.yaml"):
+                suricata_config = "/opt/homebrew/etc/suricata/suricata.yaml"
+            else:
+                suricata_config = "/etc/suricata/suricata.yaml"
+            
             sp.Popen(["dumpcap",  "-n", "-i", self.iface, "-w", self.pcap])
-            sp.Popen(["suricata", "-c", "/etc/suricata/suricata.yaml", "-i", self.iface, "-l", self.assets_dir, "-S", self.rules_file])
+            sp.Popen(["suricata", "-c", suricata_config, "-i", self.iface, "-l", self.assets_dir, "-S", self.rules_file])
             return { "status": True,
                      "message": "Capture started",
                      "capture_token": self.capture_token }
@@ -103,22 +111,19 @@ class Capture(object):
             return data + [1] * (max_len - len(data))
 
     def stop_capture(self) -> dict:
-        """Stop dumpcap & suricata if any instance present & ask create_capinfos.
+        """Stop dumpcap & suricata if any instance present & create_capinfos.
 
         Returns:
             dict: operation status
         """
-        network = Network()
-
-        # We stop the monitoring and the associated hotspot. 
-        if stop_monitoring(): 
-            if network.delete_hotspot():
-                self.create_capinfos()
-                return {"status": True,
-                        "message": "Capture stopped"}
-            else:
-                return {"status": False,
-                        "message": "No active hotspot"}     
+        # We stop the monitoring
+        if stop_monitoring():
+            # On macOS, Internet Sharing is manual (can't delete programmatically)
+            # On Linux, we would call network.delete_hotspot()
+            self.create_capinfos()
+            return {"status": True,
+                    "message": "Capture stopped",
+                    "capture_token": self.capture_token}
         else:
             return {"status": False,
                     "message": "No active capture"}

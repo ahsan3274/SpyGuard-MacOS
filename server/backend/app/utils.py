@@ -12,7 +12,7 @@ def read_config(path):
         Read a value from the configuration
         :return: value (it can be any type)
     """
-    config = yaml.load(open("/usr/share/spyguard/config.yaml", "r"), Loader=yaml.SafeLoader)
+    config = yaml.load(open("/opt/spyguard/config/config.yaml", "r"), Loader=yaml.SafeLoader)
     return reduce(dict.get, path, config)
 
 
@@ -22,9 +22,9 @@ def write_config(cat, key, value):
         :return: bool, operation status
     """
     try:
-        config = yaml.load(open("/usr/share/spyguard/config.yaml", "r"), Loader=yaml.SafeLoader)
+        config = yaml.load(open("/opt/spyguard/config/config.yaml", "r"), Loader=yaml.SafeLoader)
         config[cat][key] = value
-        with open(os.path.join(dir, "config.yaml"), "w") as yaml_file:
+        with open("/opt/spyguard/config/config.yaml", "w") as yaml_file:
             yaml_file.write(yaml.dump(config, default_flow_style=False))
             return True
     except:
@@ -36,7 +36,7 @@ def get_watchers(watcher_type):
         Read a value from the configuration
         :return: value (it can be any type)
     """
-    watchers = yaml.load(open("/usr/share/spyguard/watchers.yaml", "r"), Loader=yaml.SafeLoader)
+    watchers = yaml.load(open("/opt/spyguard/watchers.yaml", "r"), Loader=yaml.SafeLoader)
     for watcher in watchers["watchers"]:
         if watcher_type == watcher["type"]:
             yield watcher

@@ -1,69 +1,39 @@
 # SpyGuard macOS - Native Security Analysis Suite
 
-![macOS](https://img.shields.io/badge/platform-macOS%2011+-blue)
-![Python](https://img.shields.io/badge/python-3.11-green)
-![License](https://img.shields.io/badge/license-Apache%202.0-orange)
+[![macOS](https://img.shields.io/badge/platform-macOS%2011+-blue)](https://support.apple.com/macos)
+[![Python](https://img.shields.io/badge/python-3.11-green)](https://www.python.org)
+[![License](https://img.shields.io/badge/license-Apache%202.0-orange)](LICENSE.txt)
 
-## Overview
-
-SpyGuard for macOS is a **native port** of the SpyGuard network analysis tool, designed specifically for macOS. It detects signs of compromise on devices (smartphones, laptops, IoT) by monitoring their network traffic for Indicators of Compromise (IOCs), anomalies, and threats.
-
-### Key Features
-
-- 🔍 **IOC Detection** - Matches traffic against known threat intelligence
-- 🧠 **Heuristic Analysis** - Detects suspicious behavior patterns
-- 🛡️ **MISP Integration** - Syncs with MISP threat intelligence platforms
-- 🎯 **Compartment Filtering** - MISP Guard integration for sensitive IOC filtering
-- 📊 **PDF Reports** - Generates detailed analysis reports
-- 🌐 **Multi-language** - Supports 8 languages (en, fr, es, ru, pt, de, it, pl)
-
-### What's New in macOS Port
-
-| Feature | Linux Version | macOS Port |
-|---------|--------------|------------|
-| **Installation** | apt packages | Homebrew |
-| **Service Management** | systemd | launchd |
-| **Network Capture** | AF_PACKET | PCAP/BPF |
-| **Hotspot Creation** | hostapd | macOS Internet Sharing |
-| **Interface** | wlan0 | bridge100 |
-| **Python Dependencies** | Linux-specific | macOS-compatible (CPI fork) |
-| **MISP Guard** | ❌ | ✅ **NEW** |
+> **⚠️ Amateur macOS port of SpyGuard** - Created with assistance from [Qwen Code](https://github.com/QwenLM/Qwen) (Alibaba's AI Assistant). This is a community port, not officially supported.
 
 ---
 
-## Quick Start
-
-### Prerequisites
-
-- macOS Big Sur (11.0) or later
-- Administrator privileges
-- Homebrew installed (will be installed automatically if missing)
+## 🚀 Quick Start
 
 ### Installation
 
 ```bash
-# Clone the repository
-cd /tmp && git clone https://github.com/SpyGuard/SpyGuard
-cd SpyGuard
+# Clone this repository
+cd /path/to/SpyGuard-MacOS
 
-# Run the macOS installer
+# Run installer (requires password)
 sudo bash install-macos.sh
 ```
 
-The installer will:
-1. Install dependencies via Homebrew (Suricata, Wireshark, SQLite, OpenSSL, Python 3.11)
-2. Create Python virtual environment
-3. Configure Suricata for macOS (PCAP mode)
-4. Set up LaunchDaemons for background services
-5. Generate SSL certificates
-6. Fetch initial IOCs and whitelist
-7. Request necessary permissions
+Installation takes 10-15 minutes. It will:
+- Install Homebrew dependencies (Suricata, Wireshark, SQLite, Python 3.11)
+- Create Python virtual environment
+- Configure Suricata for macOS
+- Generate SSL certificates
+- Fetch initial IOCs
 
-### Post-Installation Setup
+---
+
+### Usage
 
 #### 1. Enable Internet Sharing
 
-SpyGuard on macOS uses **Internet Sharing** to create a network for device analysis:
+SpyGuard uses macOS Internet Sharing to create a network for device analysis:
 
 1. Open **System Settings** → **General** → **Sharing**
 2. Select **Internet Sharing** (don't toggle yet)
@@ -74,236 +44,174 @@ SpyGuard on macOS uses **Internet Sharing** to create a network for device analy
 5. Click **Wi-Fi Options...** and set network name (e.g., `SpyGuard-Analysis`)
 6. Toggle **Internet Sharing** ON
 
-📖 **Detailed guide:** See [docs/macos-internet-sharing-setup.md](docs/macos-internet-sharing-setup.md)
+#### 2. Start SpyGuard
 
-#### 2. Grant Permissions
-
-macOS requires explicit permission for network capture:
-
-1. **Full Disk Access:**
-   - System Settings → Privacy & Security → Full Disk Access
-   - Add your terminal application
-
-2. **Local Network Access:**
-   - System Settings → Privacy & Security → Local Network
-   - Enable for Terminal/Python
+```bash
+sudo /opt/spyguard/run-spyguard.sh
+```
 
 #### 3. Access the Interface
 
-- **Frontend (User Interface):** http://localhost:8000
-- **Backend (Management):** https://localhost:8443
+- **Frontend:** http://localhost:8000
+- **Backend:** https://localhost:8443
 
-Default credentials are set during installation.
+#### 4. Analyze a Device
 
----
-
-## Usage
-
-### Analyzing a Device
-
-1. **Connect the device** to the SpyGuard network (`SpyGuard-Analysis`)
-2. **Open the frontend** at http://localhost:8000
-3. **Start a new capture** session
-4. **Interact with the device** (send messages, open apps, browse)
-5. **Wait 15-30 minutes** for sufficient traffic capture
-6. **View results** and export PDF report
-
-### Best Practices
-
-- ✅ Analyze in public places or controlled environments
-- ✅ Interact with the device during analysis
-- ✅ Update IOCs regularly via the backend
-- ✅ Export reports for documentation
+1. Connect the device to your Mac's hotspot (the one you created in step 1)
+2. Open the frontend at http://localhost:8000
+3. **Set your phone's IP** (recommended: set static IP 192.168.2.2 on your phone)
+4. Click **Start Capture**
+5. Use your device normally for 15-30 minutes
+6. Click **Stop Capture**
+7. Click **Analyze Traffic**
+8. View results!
 
 ---
 
-## Architecture
+## ✨ Features
+
+| Feature | Status |
+|---------|--------|
+| **Installation** | ✅ Homebrew-based (automated) |
+| **Services** | ✅ Manual runner script (simple) |
+| **Network Capture** | ✅ PCAP/BPF via bridge100 |
+| **Network Setup** | ✅ macOS Internet Sharing |
+| **IOC Detection** | ✅ Suricata-based matching |
+| **Heuristic Analysis** | ✅ Behavioral detection |
+| **IP Filtering** | ✅ Filter by device IP |
+| **PDF Reports** | ✅ WeasyPrint (auto-configured) |
+| **Multi-language** | ✅ 8 languages supported |
+
+---
+
+## 📱 Finding Your Phone's IP
+
+### Recommended: Set Static IP
+
+**iPhone:**
+1. Settings → Wi-Fi → Tap ⓘ next to hotspot
+2. Configure IP → Manual
+3. IP Address: `192.168.2.2`
+4. Subnet: `255.255.255.0`
+5. Router: `192.168.2.1`
+
+**Android:**
+1. Settings → Network → Wi-Fi → Tap network
+2. Advanced → IP Settings → Static
+3. IP Address: `192.168.2.2`
+4. Gateway: `192.168.2.1`
+
+### Or Find Current IP
+
+**iPhone:** Settings → Wi-Fi → Tap ⓘ → See IP Address  
+**Android:** Settings → Network → Wi-Fi → Tap network → Advanced → IP Address  
+**Mac Terminal:** `arp -a` (look for 192.168.2.2 or .3)
+
+---
+
+## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    SpyGuard macOS                           │
-├─────────────────────────────────────────────────────────────┤
-│  Frontend (Vue.js)        │  Backend (Flask)               │
-│  http://localhost:8000    │  https://localhost:8443        │
-├─────────────────────────────────────────────────────────────┤
-│                     Analysis Engine                         │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────┐    │
-│  │ IOC Matching│  │  Heuristics │  │  MISP Guard     │    │
-│  └─────────────┘  └─────────────┘  └─────────────────┘    │
-├─────────────────────────────────────────────────────────────┤
-│  Suricata (PCAP)  │  SQLite DB    │  LaunchDaemons         │
-│  bridge100        │  IOCs/Config  │  Service Management    │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Directory Structure
-
-```
-/opt/spyguard/
-├── analysis/           # Core analysis engine
-│   ├── classes/       # Engine, JARM, reports, MISP Guard
-│   ├── locales/       # Language files
-│   └── platform.py    # Platform abstraction (Linux/macOS)
-├── server/
-│   ├── backend/       # Management API (port 8443)
-│   └── frontend/      # User interface API (port 8000)
-├── app/
-│   ├── backend/       # Vue.js admin interface
-│   └── frontend/      # Vue.js user interface
-├── database/          # SQLite database
-├── config/            # Configuration files
-└── logs/              # Service logs
+┌──────────────────────────────────────────────┐
+│           SpyGuard macOS                     │
+├──────────────────────────────────────────────┤
+│  Frontend (Vue.js)  │  Backend (Flask)      │
+│  Port 8000          │  Port 8443            │
+├──────────────────────────────────────────────┤
+│        Analysis Engine                       │
+│  ┌──────────┐ ┌──────────┐ ┌────────────┐  │
+│  │ IOC      │ │Heuristics│ │PDF Reports │  │
+│  └──────────┘ └──────────┘ └────────────┘  │
+├──────────────────────────────────────────────┤
+│  Suricata (PCAP)  │  SQLite  │  Manual     │
+│  bridge100        │  DB      │  Runner     │
+└──────────────────────────────────────────────┘
 ```
 
 ---
 
-## MISP Integration
+## 🛠️ Requirements
 
-### Connecting to MISP Instances
-
-SpyGuard can sync IOCs from MISP threat intelligence platforms:
-
-1. Access the **Backend** at https://localhost:8443
-2. Navigate to **MISP Instances**
-3. Add your MISP instance:
-   - **Name:** Friendly name
-   - **URL:** MISP instance URL
-   - **API Key:** Your MISP API key
-   - **SSL Verify:** Enable for production
-
-### MISP Guard Filtering
-
-The macOS port includes **MISP Guard** integration for advanced IOC filtering:
-
-- **Compartment Rules:** Define which MISP instances can share IOCs
-- **Tag Filtering:** Block IOCs with specific tags (e.g., `tlp:red`)
-- **Distribution Levels:** Respect MISP distribution hierarchy
-- **Attribute Filtering:** Block sensitive attribute types
-
-Configuration: `server/backend/app/classes/misp_guard_config.json`
-
-Example compartments:
-- `stalkerware` - ECHAP stalkerware IOCs
-- `malware` - General malware IOCs
-- `threat_intel` - External threat intelligence
+- macOS Big Sur (11.0) or later
+- Administrator privileges
+- Homebrew (installed automatically)
 
 ---
 
-## Service Management
+## 📦 Components
 
-### Using launchctl
+### Installation & Scripts
+- `install-macos.sh` - macOS installer
+- `run-spyguard.sh` - Simple runner (no background services)
+- `uninstall-macos.sh` - Clean removal
+
+### Platform Support
+- `analysis/platform.py` - Linux/macOS abstraction layer
+- `analysis/utils.py` - Platform-aware paths
+- `server/frontend/app/classes/capture.py` - macOS capture logic
+
+### Documentation
+- `README-macos.md` - This file (main guide)
+- `docs/macos-internet-sharing-setup.md` - Network setup guide
+- `docs/macos-services-architecture.md` - Service architecture
+
+---
+
+## 🔧 Service Management
+
+### Manual Start/Stop (Recommended)
 
 ```bash
-# Check service status
-launchctl list | grep spyguard
+# Start
+sudo /opt/spyguard/run-spyguard.sh
 
-# Start services
-sudo launchctl load -w /Library/LaunchDaemons/com.spyguard.*.plist
+# Stop (Ctrl+C in terminal)
 
-# Stop services
-sudo launchctl unload -w /Library/LaunchDaemons/com.spyguard.*.plist
-
-# Restart a specific service
-sudo launchctl unload /Library/LaunchDaemons/com.spyguard.backend.plist
-sudo launchctl load /Library/LaunchDaemons/com.spyguard.backend.plist
+# Check status
+lsof -i :8000 -i :8443
 ```
 
-### Viewing Logs
+### Kill Stuck Processes
 
 ```bash
-# Frontend logs
+# Kill all SpyGuard processes
+sudo pkill -9 -f spyguard
+
+# Or kill by port
+sudo lsof -ti :8000 -i :8443 | xargs sudo kill -9
+
+# Wait for ports to release
+sleep 5
+```
+
+---
+
+## 📊 Logs
+
+```bash
+# View logs
 tail -f /var/log/spyguard/frontend.log
-
-# Backend logs
 tail -f /var/log/spyguard/backend.log
-
-# Suricata alerts
 tail -f /var/log/spyguard/suricata/eve.json
 
-# Watchers (IOC updates)
-tail -f /var/log/spyguard/watchers.log
+# View errors
+tail -f /var/log/spyguard/frontend.error.log
+tail -f /var/log/spyguard/backend.error.log
 ```
 
 ---
 
-## Troubleshooting
+## 🤝 Contributing
 
-### Common Issues
+This is an **amateur port created with AI assistance**. Contributions welcome!
 
-#### No Traffic Captured
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Open a Pull Request
 
-**Problem:** Analysis shows no network traffic
-
-**Solution:**
-1. Verify Internet Sharing is enabled
-2. Check bridge interface: `ifconfig bridge100`
-3. Ensure device is connected to SpyGuard network
-4. Grant Full Disk Access to Terminal
-
-#### Services Won't Start
-
-**Problem:** LaunchDaemons fail to load
-
-**Solution:**
-```bash
-# Check plist syntax
-plutil -lint /Library/LaunchDaemons/com.spyguard.*.plist
-
-# Check logs
-console.app → Search "spyguard"
-
-# Reload services
-sudo launchctl unload /Library/LaunchDaemons/com.spyguard.*.plist
-sudo launchctl load /Library/LaunchDaemons/com.spyguard.*.plist
-```
-
-#### Suricata Errors
-
-**Problem:** Suricata fails to capture packets
-
-**Solution:**
-```bash
-# Test Suricata config
-suricata -T -c /usr/local/etc/suricata/suricata.yaml
-
-# Check interface
-ifconfig bridge100
-
-# Restart backend
-sudo launchctl restart com.spyguard.backend
-```
-
-### Getting Help
-
-- **Documentation:** `docs/` directory
-- **Issues:** https://github.com/SpyGuard/SpyGuard/issues
-- **MISP Guard:** https://github.com/MISP/misp-guard
-
----
-
-## Uninstallation
-
-```bash
-# Stop services
-sudo launchctl unload -w /Library/LaunchDaemons/com.spyguard.*.plist
-
-# Remove installation
-sudo rm -rf /opt/spyguard
-sudo rm -rf /var/log/spyguard
-sudo rm /Library/LaunchDaemons/com.spyguard.*.plist
-
-# Remove Homebrew packages (optional)
-brew remove suricata wireshark sqlite openssl@3 python@3.11
-
-# Disable Internet Sharing
-# System Settings → General → Sharing → Internet Sharing → OFF
-```
-
----
-
-## Development
-
-### Running from Source
+### Development Setup
 
 ```bash
 # Create virtual environment
@@ -314,92 +222,131 @@ source venv/bin/activate
 pip install -r assets/requirements.txt
 
 # Run backend
-cd server/backend
-python3 main.py
+cd server/backend && python3 main.py
 
-# Run frontend (in another terminal)
-cd server/frontend
-python3 main.py
-```
-
-### Building Vue.js Apps
-
-```bash
-# Backend app
-cd app/backend
-npm install
-npm run build
-
-# Frontend app
-cd app/frontend
-npm install
-npm run build
+# Run frontend (another terminal)
+cd server/frontend && python3 main.py
 ```
 
 ---
 
-## Security Considerations
+## 📄 License
 
-- **Network Capture:** Requires elevated permissions
-- **SSL Certificates:** Self-signed for local use only
-- **IOC Data:** Handle according to TLP markings
-- **Privacy:** Only analyze devices you own or have permission to test
-
----
-
-## Credits
-
-SpyGuard macOS is a fork and enhancement of:
-- **TinyCheck** by Kaspersky Lab
-- **SpyGuard** by Felix Aimé
-- **MISP Guard** by MISP Project
-- **CPI SpyGuard** by CyberPeace Institute
-
-### Contributors
-
-- Original concept: Kaspersky Lab
-- SpyGuard enhancements: Felix Aimé, ECHAP
-- macOS port: SpyGuard Team
-- MISP Guard: MISP Project
-
-### Technologies Used
-
-- [Suricata](https://suricata.io/) - Network threat detection
-- [Vue.js](https://vuejs.org/) - Frontend framework
-- [Flask](https://flask.palletsprojects.com/) - Backend API
-- [MISP](https://www.misp-project.org/) - Threat intelligence
-- [Homebrew](https://brew.sh/) - Package manager
-- [Wireshark](https://www.wireshark.org/) - Packet capture
-
----
-
-## License
-
-Apache License 2.0
+Apache License 2.0 - See [LICENSE.txt](LICENSE.txt) for details.
 
 **Note:** IOC databases may have separate licenses (e.g., Creative Commons BY-NC-SA for ECHAP stalkerware IOCs).
 
 ---
 
-## Contact
+## 🙏 Credits & Acknowledgments
 
-- **Email:** spyguard@protonmail.com
-- **Twitter:** @felixaime
-- **Issues:** https://github.com/SpyGuard/SpyGuard/issues
+### Original Projects
+- **TinyCheck** - Kaspersky Lab (original concept)
+- **SpyGuard** - Felix Aimé (enhanced version)
+- **MISP Guard** - MISP Project (IOC filtering)
+- **CPI SpyGuard** - CyberPeace Institute (dependency updates)
+
+### This macOS Port
+- **Porting effort:** Amateur community port
+- **Development assistance:** [Qwen Code](https://github.com/QwenLM/Qwen) (Alibaba's AI Assistant)
+- **Not officially supported** by the original SpyGuard authors
+
+### Technologies Used
+- [Suricata](https://suricata.io/) - Network threat detection
+- [Vue.js](https://vuejs.org/) - Frontend framework
+- [Flask](https://flask.palletsprojects.com/) - Backend API
+- [WeasyPrint](https://weasyprint.org/) - PDF generation
+- [Homebrew](https://brew.sh/) - Package manager
 
 ---
 
-## Changelog
+## ⚠️ Known Limitations
 
-### macOS Port (Current)
+### macOS Restrictions
 
-- ✅ Native macOS support (Intel + Apple Silicon)
-- ✅ Homebrew-based installation
-- ✅ launchd service management
-- ✅ PCAP-based packet capture
-- ✅ Internet Sharing integration
-- ✅ MISP Guard filtering
-- ✅ Updated Python dependencies (CPI fork)
-- ✅ Platform abstraction layer
+1. **No Native Hotspot Creation**
+   - Requires manual Internet Sharing setup
+   - Cannot automate hotspot creation
+   - User must configure in System Settings
 
-For original SpyGuard changelog, see the main repository.
+2. **Packet Capture Permissions**
+   - Requires running as root (sudo)
+   - macOS security restrictions
+
+3. **Network Interface Detection**
+   - Uses `bridge100` (Internet Sharing bridge)
+   - Different from Linux `wlan0`
+
+### Platform Differences
+
+| Feature | Linux | macOS |
+|---------|-------|-------|
+| Hotspot | Automatic (hostapd) | Manual (Internet Sharing) |
+| Capture | AF_PACKET | PCAP/BPF |
+| Service Manager | systemd | Manual runner |
+| Package Manager | apt | Homebrew |
+| Network Interface | wlan0 | bridge100 |
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### No Traffic Captured
+**Problem:** Analysis shows no network traffic
+
+**Solution:**
+1. Verify Internet Sharing is enabled
+2. Check bridge interface: `ifconfig bridge100`
+3. Ensure device is connected to SpyGuard network
+4. Check Suricata config: `/opt/homebrew/etc/suricata/suricata.yaml`
+
+#### Capture Stops with Error
+**Problem:** "String did not match expected pattern"
+
+**Solution:** This is a cosmetic error from Linux-specific code. The capture still works. Ignore the error and click "Analyze" anyway.
+
+#### PDF Generation Failed
+**Problem:** Analysis completes but no PDF report
+
+**Solution:** 
+```bash
+# Install pango dependencies
+brew install pango glib gdk-pixbuf librsvg
+
+# Reinstall weasyprint
+sudo /opt/spyguard/spyguard-venv/bin/pip install --force-reinstall weasyprint
+```
+
+#### Ports Stuck After Crash
+**Problem:** "Address already in use"
+
+**Solution:**
+```bash
+sudo lsof -ti :8000 -i :8443 | xargs sudo kill -9
+sleep 5
+sudo /opt/spyguard/run-spyguard.sh
+```
+
+---
+
+## 📞 Support
+
+This is an **unofficial community port**. For support:
+
+- **Issues:** https://github.com/SpyGuard/SpyGuard/issues
+- **Documentation:** See `docs/` directory
+- **Original Project:** https://github.com/SpyGuard/SpyGuard
+
+---
+
+## 🏷️ Tags
+
+`security` `macos` `threat-intelligence` `suricata` `network-analysis` `malware-detection` `stalkerware` `ioc` `cybersecurity` `amateur-port` `qwen-assisted`
+
+---
+
+**Last Updated:** March 2026  
+**Version:** 1.0.0 (macOS Port - Amateur/Qwen-Assisted)  
+**Status:** Functional with known limitations

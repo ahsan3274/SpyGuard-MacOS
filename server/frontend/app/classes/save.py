@@ -2,13 +2,20 @@
 # -*- coding: utf-8 -*-
 
 import io
+import os
 import re
 import shutil
 from datetime import datetime
 
 import psutil
-import pyudev
 from flask import jsonify, send_file
+
+# pyudev is Linux-only, use platform check
+try:
+    import pyudev
+    HAS_PYUDEV = True
+except ImportError:
+    HAS_PYUDEV = False
 
 
 class Save():
@@ -23,6 +30,12 @@ class Save():
         Returns:
             dict: contains the connection status.
         """
+        # pyudev is Linux-only, return not connected on macOS
+        if not HAS_PYUDEV:
+            self.mount_point = ""
+            return jsonify({"status": False,
+                            "message": "USB save not supported on macOS"})
+        
         self.usb_devices = []
         context = pyudev.Context()
         removable = [device for device in context.list_devices(

@@ -30,7 +30,7 @@ backend:
 frontend:
   backend_option: true
   download_links: false
-  http_port: 8000
+  http_port: 8080
   remote_access: true
   shutdown_option: true
   slideshow: true

@@ -11,7 +11,14 @@ from functools import reduce
 
 # I'm not going to use an ORM for that.
 parent = os.path.split(os.path.dirname(os.path.abspath(sys.argv[0])))[0]
-conn = sqlite3.connect(os.path.join(parent, "database.sqlite3"))
+
+# macOS database path: /opt/spyguard/database/database.sqlite3
+# Linux path: /usr/share/spyguard/database.sqlite3
+db_path = os.path.join(parent, "database", "database.sqlite3")
+if not os.path.exists(db_path):
+    db_path = os.path.join(parent, "database.sqlite3")
+    
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 
@@ -42,8 +49,12 @@ def get_config(path):
         Read a value from the configuration
         :return: value (it can be any type)
     """
-    config = yaml.load(open(os.path.join(parent, "config.yaml"),
-                            "r"), Loader=yaml.SafeLoader)
+    # macOS path: /opt/spyguard/config/config.yaml
+    # Linux path: /usr/share/spyguard/config.yaml
+    config_path = os.path.join(parent, "config", "config.yaml")
+    if not os.path.exists(config_path):
+        config_path = os.path.join(parent, "config.yaml")
+    config = yaml.load(open(config_path, "r"), Loader=yaml.SafeLoader)
     return reduce(dict.get, path, config)
 
 

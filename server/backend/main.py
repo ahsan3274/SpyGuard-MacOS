@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask, render_template, send_from_directory, jsonify, redirect
+from flask_cors import CORS
 from app.decorators import auth
 from app.blueprints.ioc import ioc_bp
 from app.blueprints.whitelist import whitelist_bp
@@ -18,6 +19,9 @@ from sys import path
 
 app = Flask(__name__, template_folder="../../app/backend/dist")
 app.config["SECRET_KEY"] = secrets.token_bytes(32)
+
+# Enable CORS for frontend (running on port 8000)
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 @app.route("/", methods=["GET"])
 @auth.login_required
@@ -59,10 +63,10 @@ app.register_blueprint(watchers_bp, url_prefix='/api/watchers')
 app.register_blueprint(update_bp, url_prefix='/api/update')
 
 if __name__ == '__main__':
-    ssl_cert = "{}/{}".format(path[0], 'cert.pem')
-    ssl_key = "{}/{}".format(path[0], 'key.pem')
+    ssl_cert = "/opt/spyguard/config/cert.pem"
+    ssl_key = "/opt/spyguard/config/key.pem"
 
     if read_config(("backend", "remote_access")):
-        app.run(host="0.0.0.0", port=8443, ssl_context=(ssl_cert, ssl_key))
+        app.run(host="0.0.0.0", port=8443, ssl_context=(ssl_cert, ssl_key), threaded=True)
     else:
-        app.run(port=8443)
+        app.run(port=8443, threaded=True)

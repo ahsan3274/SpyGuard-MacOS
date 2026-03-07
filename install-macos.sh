@@ -134,31 +134,26 @@ create_directories() {
     sudo cp "${SCRIPT_PATH}/config.yaml" "${CONFIG_DIR}/"
     sudo cp "${SCRIPT_PATH}/watchers.yaml" "${SPYGUARD_DIR}/"
     
+    # Make launcher scripts executable
+    sudo chmod +x "${SPYGUARD_DIR}/server/frontend/start-frontend.sh"
+    sudo chmod +x "${SPYGUARD_DIR}/server/backend/start-backend.sh"
+    sudo chmod +x "${SPYGUARD_DIR}/server/backend/start-watchers.sh"
+
     echo -e "${GREEN}    ✓ Directories created${NC}"
 }
 
 install_packages() {
-    echo -e "${GREEN}[+] Installing system dependencies via Homebrew...${NC}"
-    
-    packages=("suricata" "wireshark" "sqlite" "openssl" "python@3.11" "dnsmasq")
-    
-    for package in "${packages[@]}"
-    do
-        if brew list "$package" &>/dev/null; then
-            echo -e "${GREEN}    ✓ ${package} already installed${NC}"
+    echo -e "${GREEN}[+] Checking system dependencies via Homebrew...${NC}"
+    packages=("suricata" "wireshark" "sqlite" "openssl@3" "python@3.11" "dnsmasq")
+    for package in "${packages[@]}"; do
+        if sudo -u "$SUDO_USER" brew list "$package" &>/dev/null; then
+            echo -e "${GREEN}    ✓ ${package} installed${NC}";
         else
-            echo -e "${YELLOW}    Installing ${package}...${NC}"
-            brew install "$package" --quiet
-            if [ $? -eq 0 ]; then
-                echo -e "${GREEN}    ✓ ${package} installed${NC}"
-            else
-                echo -e "${RED}    ✗ Failed to install ${package}${NC}"
-            fi
-        fi
+            echo -e "${RED}    ✗ ${package} NOT installed${NC}";
+            echo -e "${YELLOW}    Run: brew install suricata wireshark sqlite openssl@3 python@3.11 dnsmasq${NC}";
+            exit 1;
+        fi;
     done
-    
-    # Link python@3.11
-    brew link --overwrite python@3.11 2>/dev/null || true
 }
 
 create_venv() {
@@ -203,8 +198,8 @@ create_launchdaemons() {
     <string>com.spyguard.frontend</string>
     <key>ProgramArguments</key>
     <array>
-        <string>${VENV_DIR}/bin/python3</string>
-        <string>${SPYGUARD_DIR}/server/frontend/main.py</string>
+        <string>/bin/bash</string>
+        <string>${SPYGUARD_DIR}/server/frontend/start-frontend.sh</string>
     </array>
     <key>WorkingDirectory</key>
     <string>${SPYGUARD_DIR}</string>
@@ -240,8 +235,8 @@ EOF
     <string>com.spyguard.backend</string>
     <key>ProgramArguments</key>
     <array>
-        <string>${VENV_DIR}/bin/python3</string>
-        <string>${SPYGUARD_DIR}/server/backend/main.py</string>
+        <string>/bin/bash</string>
+        <string>${SPYGUARD_DIR}/server/backend/start-backend.sh</string>
     </array>
     <key>WorkingDirectory</key>
     <string>${SPYGUARD_DIR}</string>
@@ -279,8 +274,8 @@ EOF
     <string>com.spyguard.watchers</string>
     <key>ProgramArguments</key>
     <array>
-        <string>${VENV_DIR}/bin/python3</string>
-        <string>${SPYGUARD_DIR}/server/backend/watchers.py</string>
+        <string>/bin/bash</string>
+        <string>${SPYGUARD_DIR}/server/backend/start-watchers.sh</string>
     </array>
     <key>WorkingDirectory</key>
     <string>${SPYGUARD_DIR}</string>

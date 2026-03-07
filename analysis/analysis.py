@@ -2,10 +2,24 @@
 # -*- coding: utf-8 -*-
 
 from classes.engine import Engine
-from classes.report import Report
 import sys
 import json
 import os
+
+# Set library path for macOS (weasyprint needs pango, glib, etc.)
+if sys.platform == 'darwin':
+    brew_lib = '/opt/homebrew/lib'
+    current = os.environ.get('DYLD_LIBRARY_PATH', '')
+    if brew_lib not in current:
+        os.environ['DYLD_LIBRARY_PATH'] = brew_lib + ':' + current if current else brew_lib
+
+# PDF report generation is optional (requires weasyprint with pango)
+try:
+    from classes.report import Report
+    HAS_PDF_SUPPORT = True
+except ImportError as e:
+    HAS_PDF_SUPPORT = False
+    print(f"⚠️  PDF report generation disabled: {e}")
 
 """
     This file is called by the frontend to do the analysis.
@@ -58,9 +72,18 @@ def analyze(capture_folder):
         with open(os.path.join(capture_folder, "assets/errors.json"), "w") as f:
             f.write(json.dumps(engine.errors, indent=4, separators=(',', ': ')))
 
-        # Generate the PDF report
-        report = Report(capture_folder, analysis_duration)
-        report.generate_report()
+        # Generate the PDF report (optional)
+        if HAS_PDF_SUPPORT:
+            try:
+                report = Report(capture_folder, analysis_duration)
+                report.generate_report()
+                print("✅ PDF report generated")
+            except Exception as e:
+                print(f"⚠️  PDF generation failed: {e}")
+        else:
+            print("ℹ️  Skipping PDF report (weasyprint not available)")
+
+        print("✅ Analysis complete!")
 
     else:
         print("The folder doesn't exist.")

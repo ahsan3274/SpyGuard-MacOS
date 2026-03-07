@@ -49,11 +49,11 @@ def read_config(path) -> any:
     Returns:
         any: The configuration element.
     """
-    config = yaml.load(open("/usr/share/spyguard/config.yaml", "r"), Loader=yaml.SafeLoader)
+    config = yaml.load(open("/opt/spyguard/config/config.yaml", "r"), Loader=yaml.SafeLoader)
     return reduce(dict.get, path, config)
 
 def write_config(cat, key, value):
-    """Write a new value in the configuration file. 
+    """Write a new value in the configuration file.
 
     Args:
         cat (str): Category where to write
@@ -64,9 +64,9 @@ def write_config(cat, key, value):
         bool: True if successful.
     """
     try:
-        config = yaml.load(open("/usr/share/spyguard/config.yaml", "r"), Loader=yaml.SafeLoader)
+        config = yaml.load(open("/opt/spyguard/config/config.yaml", "r"), Loader=yaml.SafeLoader)
         config[cat][key] = value
-        with open("/usr/share/spyguard/config.yaml", "w") as yaml_file:
+        with open("/opt/spyguard/config/config.yaml", "w") as yaml_file:
             yaml_file.write(yaml.dump(config, default_flow_style=False))
             return True
     except:
@@ -129,13 +129,13 @@ def get_wifi_level() -> int:
     except:
         return 0
 
-def get_iocs_number() -> int: 
+def get_iocs_number() -> int:
     """Get number of IOCs in the database
 
     Returns:
         int: number of IOCs
     """
-    with sqlite3.connect("/usr/share/spyguard/database.sqlite3") as c:
+    with sqlite3.connect("/opt/spyguard/database/database.sqlite3") as c:
         cur = c.cursor()
         return len(cur.execute("SELECT * FROM iocs").fetchall())
 
@@ -144,7 +144,7 @@ def get_iocs(ioc_type) -> list:
     Returns:
         list: list containing the IOCs
     """
-    with sqlite3.connect("/usr/share/spyguard/database.sqlite3") as c:
+    with sqlite3.connect("/opt/spyguard/database/database.sqlite3") as c:
         cur = c.cursor()
         cur.execute("SELECT value, tag FROM iocs WHERE type = ? ORDER BY value", (ioc_type,))
         res = cur.fetchall()

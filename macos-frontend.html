@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpyGuard macOS</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        .status-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .status-item:last-child { border-bottom: none; }
+        .status-label { color: #666; }
+        .status-value { font-weight: 600; color: #333; }
+        .status-value.good { color: #28a745; }
+        .status-value.bad { color: #dc3545; }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: transform 0.2s, background 0.2s;
+        }
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        .btn:active { transform: translateY(0); }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover { background: #c82333; }
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .log-box {
+            background: #1e1e1e;
+            color: #00ff00;
+            font-family: "Courier New", monospace;
+            padding: 15px;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+        .hidden { display: none; }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            background: #e9ecef;
+            margin: 0 5px;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+        .step.active {
+            background: #667eea;
+            color: white;
+        }
+        .step.completed {
+            background: #28a745;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ SpyGuard macOS</h1>
+        <p class="subtitle">Network Security Analysis</p>
+
+        <!-- Setup Instructions -->
+        <div id="setup-step" class="alert alert-info">
+            <strong>📡 Setup Required:</strong> Make sure Internet Sharing is enabled on your Mac:
+            <br><br>
+            <strong>System Settings → General → Sharing → Internet Sharing</strong>
+            <br>Share FROM: Wi-Fi/Ethernet → TO: Wi-Fi
+        </div>
+
+        <!-- Status Display -->
+        <div class="status-box">
+            <div class="status-item">
+                <span class="status-label">Internet Sharing</span>
+                <span class="status-value" id="sharing-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">IOCs Loaded</span>
+                <span class="status-value" id="ioc-count">0</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Backend</span>
+                <span class="status-value" id="backend-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Target Device IP</span>
+                <span class="status-value" id="device-ip">Any</span>
+            </div>
+        </div>
+
+        <!-- IP Filter Setting -->
+        <div class="alert alert-warning" style="margin-bottom: 20px;">
+            <strong>📱 Filter by Device IP (Recommended):</strong><br>
+            Enter your phone's IP to analyze only its traffic (not your Mac's).<br>
+            <br>
+            <strong>How to find/set your phone's IP:</strong>
+            <details style="margin-top: 10px; cursor: pointer;">
+                <summary style="color: #667eea; font-weight: 600;">📖 Click to show instructions</summary>
+                <div style="margin-top: 10px; padding: 10px; background: white; border-radius: 5px; font-size: 13px;">
+                    <strong>⭐ Recommended: Set Static IP (Easiest!)</strong><br>
+                    <em>Guarantees your phone always gets the same IP</em><br><br>
+                    <strong>iPhone:</strong><br>
+                    Settings → Wi-Fi → Tap ⓘ next to hotspot → Configure IP → Manual<br>
+                    IP Address: <code>192.168.2.2</code> | Subnet: <code>255.255.255.0</code> | Router: <code>192.168.2.1</code><br><br>
+                    <strong>Android:</strong><br>
+                    Settings → Wi-Fi → Tap network → Advanced → IP Settings → Static<br>
+                    IP Address: <code>192.168.2.2</code> | Gateway: <code>192.168.2.1</code><br><br>
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid #eee;">
+                    <strong>Or Find Current IP (Dynamic):</strong><br><br>
+                    <strong>iPhone:</strong><br>
+                    Settings → Wi-Fi → Tap ⓘ next to hotspot → See "IP Address"<br><br>
+                    <strong>Android:</strong><br>
+                    Settings → Network → Wi-Fi → Tap network → Advanced → IP Address<br><br>
+                    <strong>Or on your Mac (Terminal):</strong><br>
+                    <code style="background: #f0f0f0; padding: 2px 5px; border-radius: 3px;">arp -a</code><br>
+                    Look for IPs like 192.168.2.2 or 192.168.2.3<br><br>
+                    <strong>⚠️ Important:</strong><br>
+                    • Your Mac (hotspot) is: <code>192.168.2.1</code><br>
+                    • Your phone should be: <code>192.168.2.2</code> (or .3, .4, etc.)<br>
+                    • Don't filter for 192.168.2.1 (that's your Mac!)<br><br>
+                    <strong>📍 Common IPs:</strong><br>
+                    iPhone (static): <code>192.168.2.2</code> | Android (static): <code>192.168.2.2</code>
+                </div>
+            </details>
+            <div style="margin-top: 15px;">
+                <input type="text" id="filter-ip" placeholder="192.168.2.2" 
+                       style="padding: 8px; border: 1px solid #ddd; border-radius: 5px; width: 200px;">
+                <button onclick="setFilterIP()" style="margin-left: 10px; padding: 8px 15px; background: #667eea; color: white; border: none; border-radius: 5px; cursor: pointer;">Set Filter</button>
+                <span id="filter-status" style="margin-left: 10px; color: #28a745;"></span>
+            </div>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div class="step active" id="step1">1. Setup</div>
+            <div class="step" id="step2">2. Capture</div>
+            <div class="step" id="step3">3. Analyze</div>
+        </div>
+
+        <!-- Capture Controls -->
+        <button class="btn" id="start-btn" onclick="startCapture()">
+            ▶️ Start Capture
+        </button>
+        <button class="btn btn-danger hidden" id="stop-btn" onclick="stopCapture()">
+            ⏹️ Stop Capture
+        </button>
+        <button class="btn btn-secondary hidden" id="analyze-btn" onclick="analyzeCapture()">
+            🔍 Analyze Traffic
+        </button>
+
+        <!-- Progress Bar -->
+        <div class="progress-bar hidden" id="progress-box">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <!-- Live Log -->
+        <div class="log-box hidden" id="log-box">
+            <div id="log-content">Waiting to start...</div>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="hidden">
+            <h2 style="margin: 20px 0 10px;">📊 Analysis Results</h2>
+            <div class="status-box" id="results-box"></div>
+            <button class="btn" onclick="location.reload()">🔄 New Capture</button>
+        </div>
+    </div>
+
+    <script>
+        let captureRunning = false;
+        let captureStartTime = null;
+        let checkInterval = null;
+
+        // Initialize
+        window.onload = function() {
+            checkStatus();
+            setInterval(checkStatus, 5000);
+        };
+
+        async function checkStatus() {
+            try {
+                // Check backend
+                const config = await fetch('/api/misc/config').then(r => r.json());
+                document.getElementById('ioc-count').textContent = config.iocs_number || '0';
+                document.getElementById('backend-status').textContent = 'Connected';
+                document.getElementById('backend-status').className = 'status-value good';
+
+                // Check Internet Sharing (check if bridge100 exists)
+                try {
+                    const networkStatus = await fetch('/api/network/status').then(r => r.json());
+                    if (networkStatus.internet) {
+                        document.getElementById('sharing-status').textContent = '✅ Active';
+                        document.getElementById('sharing-status').className = 'status-value good';
+                    } else {
+                        document.getElementById('sharing-status').textContent = '⚠️ Not Active';
+                        document.getElementById('sharing-status').className = 'status-value bad';
+                    }
+                } catch (e) {
+                    // If API fails, check config for iface_out
+                    if (config.iface_out && config.iface_out !== 'lo') {
+                        document.getElementById('sharing-status').textContent = '✅ Configured';
+                        document.getElementById('sharing-status').className = 'status-value good';
+                    } else {
+                        document.getElementById('sharing-status').textContent = '❌ Not Configured';
+                        document.getElementById('sharing-status').className = 'status-value bad';
+                    }
+                }
+
+                // Check if capture is running
+                if (captureRunning) {
+                    const elapsed = Math.floor((Date.now() - captureStartTime) / 1000);
+                    document.getElementById('log-content').innerHTML += `<div>Capture running: ${elapsed}s elapsed...</div>`;
+                    document.getElementById('progress-fill').style.width = Math.min(elapsed / 60 * 100, 100) + '%';
+                }
+            } catch (e) {
+                document.getElementById('backend-status').textContent = 'Disconnected';
+                document.getElementById('backend-status').className = 'status-value bad';
+                document.getElementById('sharing-status').textContent = '❌ Error';
+                document.getElementById('sharing-status').className = 'status-value bad';
+            }
+        }
+
+        let currentToken = null;
+        let filterIP = null;
+
+        function setFilterIP() {
+            const ip = document.getElementById('filter-ip').value.trim();
+            if (ip) {
+                filterIP = ip;
+                document.getElementById('device-ip').textContent = ip;
+                document.getElementById('device-ip').className = 'status-value good';
+                document.getElementById('filter-status').textContent = `✓ Filtering: ${ip}`;
+                addLog(`📱 Will filter traffic for IP: ${ip}`);
+            } else {
+                filterIP = null;
+                document.getElementById('device-ip').textContent = 'Any';
+                document.getElementById('device-ip').className = 'status-value';
+                document.getElementById('filter-status').textContent = '';
+                addLog('📱 Analyzing all traffic (no filter)');
+            }
+        }
+
+        async function startCapture() {
+            try {
+                document.getElementById('start-btn').classList.add('hidden');
+                document.getElementById('stop-btn').classList.remove('hidden');
+                document.getElementById('progress-box').classList.remove('hidden');
+                document.getElementById('log-box').classList.remove('hidden');
+                document.getElementById('step1').className = 'step completed';
+                document.getElementById('step2').className = 'step active';
+
+                captureRunning = true;
+                captureStartTime = Date.now();
+                document.getElementById('log-content').innerHTML = '<div>✅ Capture started!</div><div>📱 Use your device normally now...</div>';
+
+                // Start capture via API
+                const result = await fetch('/api/capture/start').then(r => r.json());
+                if (result.status) {
+                    currentToken = result.capture_token;
+                    addLog(`📁 Capture token: ${currentToken}`);
+                }
+            } catch (e) {
+                alert('Error starting capture: ' + e.message);
+                document.getElementById('start-btn').classList.remove('hidden');
+                document.getElementById('stop-btn').classList.add('hidden');
+            }
+        }
+
+        async function stopCapture() {
+            try {
+                document.getElementById('stop-btn').classList.add('hidden');
+                document.getElementById('analyze-btn').classList.remove('hidden');
+                document.getElementById('step2').className = 'step completed';
+                
+                captureRunning = false;
+
+                // Stop capture via API
+                const result = await fetch('/api/capture/stop').then(r => r.json());
+                if (result.status) {
+                    currentToken = result.capture_token;
+                    addLog(`✅ Capture stopped!`);
+                    addLog(`📁 Capture saved: ${currentToken}`);
+                    document.getElementById('log-content').innerHTML += '<div>✅ Capture stopped successfully!</div><div>📁 Ready for analysis.</div>';
+                } else {
+                    // API failed, but capture might still be saved
+                    addLog(`⚠️ Stop API returned: ${result.message || 'Unknown error'}`);
+                    addLog(`💡 Capture may still be available for analysis`);
+                    document.getElementById('log-content').innerHTML += '<div>⚠️ Stop had issues, but you can still try to analyze</div>';
+                    
+                    // Try to find the latest capture folder
+                    const folders = await fetch('/tmp/').then(r => r.text()).catch(() => '');
+                    const match = folders.match(/([A-F0-9]{8})/);
+                    if (match) {
+                        currentToken = match[1];
+                        addLog(`🔍 Found capture folder: ${currentToken}`);
+                    }
+                }
+            } catch (e) {
+                // API error - capture might still be running or already stopped
+                addLog(`⚠️ Stop error: ${e.message}`);
+                addLog(`💡 Try refreshing the page and clicking "Analyze" anyway`);
+                document.getElementById('log-content').innerHTML += `<div>⚠️ Error: ${e.message}</div><div>💡 The capture might still be saved. Try analyzing.</div>`;
+                document.getElementById('analyze-btn').classList.remove('hidden');
+            }
+        }
+
+        async function analyzeCapture() {
+            try {
+                document.getElementById('analyze-btn').disabled = true;
+                document.getElementById('analyze-btn').textContent = '⏳ Analyzing...';
+                addLog('🔍 Starting analysis...');
+
+                if (!currentToken) {
+                    throw new Error('No capture token available');
+                }
+
+                // Apply IP filter if set
+                if (filterIP) {
+                    addLog(`📱 Filtering capture for IP: ${filterIP}`);
+                    try {
+                        await fetch(`/api/capture/filter/${currentToken}/${filterIP}`, { method: 'POST' });
+                        addLog('✅ Capture filtered successfully');
+                    } catch (e) {
+                        addLog('⚠️ Filter not available, analyzing full capture');
+                    }
+                }
+
+                addLog(`📁 Analyzing capture: ${currentToken}`);
+
+                // Start analysis with token (GET request)
+                const response = await fetch(`/api/analysis/start/${currentToken}`);
+                const data = await response.json();
+
+                if (!data.status) {
+                    throw new Error(data.message || 'Analysis failed');
+                }
+
+                addLog('⏳ Analysis in progress...');
+
+                // Poll for results using the report endpoint
+                let attempts = 0;
+                const pollInterval = setInterval(async () => {
+                    attempts++;
+                    try {
+                        // Check if report exists (analysis complete)
+                        const report = await fetch(`/api/analysis/report/${currentToken}`).then(r => r.json());
+                        
+                        // If we get a valid report, analysis is done
+                        if (report && (report.high || report.moderate || report.low || report.alerts)) {
+                            clearInterval(pollInterval);
+                            addLog('✅ Analysis complete!');
+                            showResults(report);
+                        } else if (attempts > 120) {
+                            clearInterval(pollInterval);
+                            throw new Error('Analysis timed out (2 minutes)');
+                        } else {
+                            addLog(`⏳ Still analyzing... (${attempts}s)`);
+                        }
+                    } catch (e) {
+                        // Report not ready yet, keep waiting
+                        if (attempts > 120) {
+                            clearInterval(pollInterval);
+                            throw new Error('Analysis timed out');
+                        } else {
+                            addLog(`⏳ Still analyzing... (${attempts}s)`);
+                        }
+                    }
+                }, 2000);
+            } catch (e) {
+                alert('Error starting analysis: ' + e.message);
+                document.getElementById('analyze-btn').disabled = false;
+                document.getElementById('analyze-btn').textContent = '🔍 Analyze Traffic';
+            }
+        }
+
+        function showResults(data) {
+            document.getElementById('step3').className = 'step completed';
+            document.getElementById('progress-box').classList.add('hidden');
+            document.getElementById('log-box').classList.add('hidden');
+            document.getElementById('analyze-btn').classList.add('hidden');
+            document.getElementById('results').classList.remove('hidden');
+
+            const resultsBox = document.getElementById('results-box');
+            
+            if (data.alerts && data.alerts.high && data.alerts.high.length > 0) {
+                resultsBox.innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>⚠️ HIGH ALERTS DETECTED!</strong><br>
+                        Found ${data.alerts.high.length} high-priority threats.<br>
+                        Your device may be compromised.
+                    </div>
+                    <h3>High Priority Alerts:</h3>
+                    <ul>
+                        ${data.alerts.high.map(a => `<li>${a.signature || a.message}</li>`).join('')}
+                    </ul>
+                `;
+            } else if (data.alerts && (data.alerts.moderate || data.alerts.low)) {
+                resultsBox.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>ℹ️ Some Alerts Found</strong><br>
+                        Found ${((data.alerts.moderate||[]).length + (data.alerts.low||[]).length)} alerts to review.
+                    </div>
+                `;
+            } else {
+                resultsBox.innerHTML = `
+                    <div class="alert" style="background:#d4edda;color:#155724;border-color:#c3e6cb;">
+                        <strong>✅ All Clear!</strong><br>
+                        No suspicious activity detected.
+                    </div>
+                `;
+            }
+        }
+
+        function addLog(message) {
+            document.getElementById('log-content').innerHTML += `<div>${message}</div>`;
+            document.getElementById('log-content').scrollTop = document.getElementById('log-content').scrollHeight;
+        }
+    </script>
+</body>
+</html>
