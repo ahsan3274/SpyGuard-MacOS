@@ -151,6 +151,7 @@ Apache License 2.0 - See [LICENSE.txt](LICENSE.txt) for details.
 - **SpyGuard:** Felix Aimé
 - **MISP Guard:** MISP Project
 - **macOS Port:** SpyGuard Team
+- **Development:** Created with [Qwen Code](https://github.com/QwenLM/Qwen) (Alibaba's AI Assistant)
 
 ## 📞 Support
 
