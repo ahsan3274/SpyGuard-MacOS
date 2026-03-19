@@ -228,3 +228,7 @@ Apache License 2.0 - See [LICENSE.txt](LICENSE.txt) for details.
 ## 🏷️ Tags
 
 `security` `macos` `threat-intelligence` `misp` `suricata` `network-analysis` `malware-detection` `stalkerware` `ioc` `cybersecurity`
+
+Support the Project
+
+If you find this fork useful, consider supporting its development: bc1qa25wm50g9pl26xzc0fl63reqxp47e05dp64942 (BTC)
