@@ -48,8 +48,7 @@ The indicators of compromise (IOCs) linked to stalkerware are now fully managed 
 ### Commercial use
 
 You can use SpyGuard in a commercial product. However, you can't use SpyGuard as the name of your product and you’re still required to follow the terms and conditions that the Apache License imposes, like refering to the SpyGuard project in customer documentation. Moreover, a sweet note to explain your use to the author is always appreciated, please see the contact below. You liked SpyGuard? Do not hesistate to make a donation!
-
-<a href="https://www.paypal.com/donate/?hosted_button_id=V77EASZEVTXKL"><img src="https://raw.githubusercontent.com/aha999/DonateButtons/master/Paypal.png" width="150" /></a>
+If you find this fork useful, consider supporting its development: bc1qa25wm50g9pl26xzc0fl63reqxp47e05dp64942 (BTC)
 
 ### Contact
 
